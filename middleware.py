@@ -10,28 +10,8 @@ from utilities.settings import setting
 from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.responses import JSONResponse
 
-# config file path for RBAC
-FILE_PATH = "access_config.json"
-
-
 # AuthenticationMiddware class for managing token middware. (child class of starlette middleware class)
 class AuthenticationMiddleware(BaseHTTPMiddleware):
-    # function to get full path of a file
-    @staticmethod
-    def get_config_file_path(filename: str = "access_config.json") -> str:
-        """gives full path of a file respect to the current dir of execution
-
-        Args:
-            filename (str): filename/filepath of which you want the path of. Defaults to "access_config.json".
-
-        Returns:
-            filepath (Str): complete path of the file respect to the execution dir
-        """
-        # Get the directory of the current script
-        script_dir = Path(__file__).resolve().parent
-        # Construct the full path to the config file
-        config_file_path = script_dir / filename
-        return str(config_file_path)
 
     # function to get token from the request's cookies and check if it is a valid JWT token
     @staticmethod
@@ -81,21 +61,7 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
     # function to verify if the token was signed by us and hasn't expired yet
     @staticmethod
     async def verify_token(db, token, SECRET_KEY, ALGORITHM):
-        """verify if the given JWT token was singed by given key and alogrithm, and if it is not expired.
 
-        Args:
-            db (AsyncSession): Async DB session to interact with the DB
-            token (Str): A valid JWT token
-            SECRET_KEY (Str): Secret key to verify JWT
-            ALGORITHM (Str): Algorithm from which the JWT was signed. To verify the token
-
-        Raises:
-            HTTPException: (HTTP_403_FORBIDDEN, "token is invalid") if the token is expired, wasn't signed by the given key, or doesn't contain required information.
-            HTTPException: (HTTP_403_FORBIDDEN, "Invalid token. (User not found)") if user doesn't exist in the DB or has been deleted from the DB.
-
-        Returns:
-            payload (Dict): given token's payload
-        """
         try:
             # decode the token with given secret key and algorithm. Returns dict
             payload = jwt.decode(token, SECRET_KEY, algorithms=ALGORITHM)
@@ -134,76 +100,8 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
         # return given JWT token's payload
         return payload
 
-    # function to check if the user role is allowed to access the endpoint
-    @staticmethod
-    async def check_access(request: Request, token: dict):
-        """check in the config file if the given user has the right role to access the endpoint
-
-        Args:
-            request (Request): FastAPI Request object
-            token (dict): JWT token's payload of the user
-
-        Raises:
-            HTTPException: (HTTP_500_INTERNAL_SERVER_ERROR, "Internal Server Error") if the config file is missing or unable to open.
-            HTTPException: (HTTP_500_INTERNAL_SERVER_ERROR, "HTTP_403_FORBIDDEN") if the endpoint is not allowed to all users regards of the role and if user
-            doesn't have the right role
-
-        Returns:
-            token (Dict): JWT token's payload
-        """
-        CONFIG_FILE = AuthenticationMiddleware.get_config_file_path(filename=FILE_PATH)
-        endpoint_path = request.url.path
-        user_role = token["role"]
-
-        # open file and if unable to open then raise the error
-        try:
-            with open(CONFIG_FILE, "r") as f:
-                roles_config = json.load(f)
-        except FileNotFoundError:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        # get routes dict having all routes with 'routes' key
-        routes = roles_config.get("routes")
-        # get the endpoint in the routes
-        allowed_roles = routes.get(endpoint_path)
-
-        # if route doesn't exists in the config file then raise the error
-        if allowed_roles is None:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access forbidden: insufficient permissions",
-            )
-        # if user role is not in the allowed roles for the endpoint and endpoint is not allowed for all users then raise the error
-        elif (user_role not in allowed_roles) and (not "all" in allowed_roles):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access forbidden: insufficient permissions",
-            )
-
-        # return the token's payload
-        return token
-
     # function to control main middlware flow. Don't change the name
     async def dispatch(self, request: Request, call_next):
-        """the whole control of the middleware
-
-        Args:
-            request (Request): FastAPI Request object
-            call_next (Func): Redirects to request to the given endpoint after the execution of the middleware.
-
-        Raises:
-            JSONResponse (Dict): return the error back to the FastAPI
-            e (Exception): raise error if it doesn't have status code and detail. Because then it will be an internal error.
-
-        Returns:
-            None
-        """
-        config_file_path = AuthenticationMiddleware.get_config_file_path(
-            filename=FILE_PATH
-        )
-
-        with open(config_file_path, "r") as f:
-            config_data = json.load(f)
 
         # Check if the request path is in the excluded endpoints
         excluded_endpoints = config_data.get("excluded_endpoints", [])

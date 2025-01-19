@@ -15,4 +15,4 @@ async def login(
     response: Response,
     user_credentials: OAuth2PasswordRequestForm = Depends(),
 ):
-    return await authentication.login(user_credentials, db, response)
+    return await authentication.login(user_credentials, db)

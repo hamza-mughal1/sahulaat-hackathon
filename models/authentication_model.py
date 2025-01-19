@@ -38,13 +38,23 @@ class Authentication:
 
         return ecoded_token
 
-    async def get_token(self, request: Request, db: db_dependency):
-        authorization = request.cookies.get("access_token")
+    async def get_token_websockets(self, headers):
+        authorization: str = headers.get("Authorization")
+        if authorization is None or not authorization.startswith("Bearer "):
+            raise HTTPException(status_code=403, detail="Invalid or missing token")
         token = authorization.split("Bearer ")[1]
-        payload = jwt.decode(token, self.SECRET_KEY, algorithms=self.ALGORITHM)
+        payload = jwt.decode(token, self.SECRET_KEY, algorithms=[self.ALGORITHM])
         return payload
 
-    async def login(self, user_credentials, db: db_dependency, response: Response):
+    async def get_token(self, request: Request):
+        authorization: str = request.headers.get("Authorization")
+        if authorization is None or not authorization.startswith("Bearer "):
+            raise HTTPException(status_code=403, detail="Invalid or missing token")
+        token = authorization.split("Bearer ")[1]
+        payload = jwt.decode(token, self.SECRET_KEY, algorithms=[self.ALGORITHM])
+        return payload
+
+    async def login(self, user_credentials, db: db_dependency):
         result = await db.execute(
             select(users_db_schema.Users).where(
                 users_db_schema.Users.username == user_credentials.username
@@ -60,15 +70,15 @@ class Authentication:
             {"user_id": user.id, "user_name": user.username, "type": "access-token"}
         )
 
-        response.set_cookie(
-            key="access_token",
-            value=f"Bearer {access_token}",
-            httponly=True,  # Prevent JavaScript access to the cookie
-            secure=True,  # Use Secure cookies (HTTPS only)
-            samesite="Lax",  # Prevent CSRF attacks
-            max_age=self.ACCESS_TOKEN_EXPIRE_MINUTES
-            * 60,  # Set cookie expiry in seconds
-            path="/"         ## for a specific path
-        )
+        # response.set_cookie(
+        #     key="access_token",
+        #     value=f"Bearer {access_token}",
+        #     httponly=True,  # Prevent JavaScript access to the cookie
+        #     secure=True,  # Use Secure cookies (HTTPS only)
+        #     samesite="Lax",  # Prevent CSRF attacks
+        #     max_age=self.ACCESS_TOKEN_EXPIRE_MINUTES
+        #     * 60,  # Set cookie expiry in seconds
+        #     path="/"         ## for a specific path
+        # )
 
-        return {"message": "Login successful"}
+        return {"message": "Login successful", "token": access_token}
