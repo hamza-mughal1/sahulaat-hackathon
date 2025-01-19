@@ -2,7 +2,7 @@ import firebase_admin
 from firebase_admin import credentials, messaging
 
 # Initialize Firebase Admin SDK
-cred = credentials.Certificate("path/to/serviceAccountKey.json")
+cred = credentials.Certificate("saho-laat-firebase-adminsdk-fbsvc-a3698414be.json")
 firebase_admin.initialize_app(cred)
 
 def send_push_notification(token, title, body):

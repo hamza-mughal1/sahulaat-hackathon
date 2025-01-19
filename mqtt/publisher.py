@@ -9,9 +9,9 @@ client = mqtt.Client()
 # Connect to the broker
 client.connect("test.mosquitto.org", 1883, 60)
 
-for i in range(100):
+for i in range(10):
     pattern1 = json.dumps({
-        "secret_key": "81c9a8d6-a4ac-40b8-9af5-5286cd8d161f", 
+        "secret_key": "bf11341e-7b6f-463e-bca2-72e43ef5cdcb", 
         "flow_rate": round(random.uniform(130.0, 150.0), 5),
         "energy": round(random.uniform(400.0, 500.0), 5),
         "temperature": round(random.uniform(-150.0, -100.0), 5),
@@ -19,7 +19,7 @@ for i in range(100):
         })
 
     pattern2 = json.dumps({
-        "secret_key": "81c9a8d6-a4ac-40b8-9af5-5286cd8d161f", 
+        "secret_key": "bf11341e-7b6f-463e-bca2-72e43ef5cdcb", 
         "flow_rate": round(random.uniform(0.0, 3.0), 5),
         "energy": round(random.uniform(0.0, 20.0), 5),
         "temperature": round(random.uniform(0.0, 30.0), 5),

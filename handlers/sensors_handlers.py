@@ -33,6 +33,6 @@ async def websocket_endpoint(websocket: WebSocket, sensor_id: int, db: db_depend
         while True:
             output = await sensor.get_sensor_state(sensor_id, token, db)
             await websocket.send_text(f"output = {output}")
-            await asyncio.sleep(2)
+            await asyncio.sleep(1)
     except:
         pass
