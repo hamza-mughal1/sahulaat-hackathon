@@ -4,6 +4,7 @@ class CreateSensor(BaseModel):
     name: str
     
 class GetSensor(BaseModel):
+    id: int
     name: str
         
 class IncomingData(BaseModel):
