@@ -32,6 +32,7 @@ class SensorsModel:
         return sensors_list
     
     async def get_sensor_state(self, sensor_id, token, db: AsyncSession):
+
         sensors = await db.execute(
             select(Sensors).where(and_(Sensors.user_id == token["user_id"], Sensors.id == sensor_id))
         )

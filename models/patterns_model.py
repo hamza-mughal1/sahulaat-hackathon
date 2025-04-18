@@ -41,5 +41,5 @@ class PatternsModel:
             raise HTTPException(status_code=404, detail="No patterns found for the given user id!")
         
         # Process result if needed
-        combined_data = [pattern for pattern, sensor in result]
+        combined_data = [(pattern, sensor) for pattern, sensor in result]
         return combined_data

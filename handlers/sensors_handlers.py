@@ -36,3 +36,4 @@ async def websocket_endpoint(websocket: WebSocket, sensor_id: int, db: db_depend
             await asyncio.sleep(1)
     except:
         pass
+        
